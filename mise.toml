@@ -1,0 +1,29 @@
+[tasks.build]
+description = "Build the project in release mode"
+sources = [
+  'Cargo.toml',
+  'src/**/*.rs',
+] # skip running if these files haven't changed
+outputs = ['target/release/eip712'] # skip running if this file exists and is newer than the sources
+run = "cargo build --release"
+
+[tasks.check]
+run = [
+    "cargo fmt -- --check",
+    "cargo clippy -- -D warnings",
+    "cargo test --all-features",
+]
+
+[tasks."sign"]
+depends = ['build']
+usage = '''
+flag "--pretty" help="Pretty print the output hash and the EIP-712 message"
+'''
+run = "./target/release/eip712 sign --private-key ${PRIVATE_KEY} {% if usage.pretty %} --pretty {% endif %} ./example.eip712.json"
+
+[tasks."hash"]
+depends = ["build"]
+usage = '''
+flag "--pretty" help="Pretty print the output hash and the EIP-712 message"
+'''
+run = "./target/release/eip712 hash {% if usage.pretty %} --pretty {% endif %} ./example.eip712.json"
