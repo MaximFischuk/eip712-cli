@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::path::PathBuf;
 
 use alloy::dyn_abi::TypedData;
@@ -32,9 +33,21 @@ const EIP712_ABI_SCHEMA: &str = r#"
 }
 "#;
 
-/// Load an EIP-712 JSON file, validate it against the schema, and parse it into `TypedData`.
+/// Load EIP-712 JSON from a file path, validate, and parse into `TypedData`.
 pub fn load_and_validate(file_path: PathBuf) -> eyre::Result<TypedData> {
-    let instance: serde_json::Value = serde_json::from_reader(std::fs::File::open(file_path)?)?;
+    let reader = std::fs::File::open(file_path)?;
+    read_and_validate(reader)
+}
+
+/// Load EIP-712 JSON from stdin, validate, and parse into `TypedData`.
+pub fn load_and_validate_stdin() -> eyre::Result<TypedData> {
+    let reader = std::io::stdin().lock();
+    read_and_validate(reader)
+}
+
+/// Validate and parse EIP-712 JSON from any reader.
+fn read_and_validate(reader: impl Read) -> eyre::Result<TypedData> {
+    let instance: serde_json::Value = serde_json::from_reader(reader)?;
 
     let schema = serde_json::from_str(EIP712_ABI_SCHEMA)?;
     let validator = jsonschema::validator_for(&schema)?;

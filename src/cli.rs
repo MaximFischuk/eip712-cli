@@ -11,11 +11,7 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("hash")
                 .about("Hash EIP-712 typed data")
-                .arg(
-                    arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
-                        .required(true)
-                        .index(1),
-                )
+                .arg(arg!([input] "Path to the JSON file (reads from stdin if omitted)").index(1))
                 .arg(arg!(--pretty "Print output as a pretty colored table")),
         )
         .subcommand(

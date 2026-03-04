@@ -1,31 +1,29 @@
 use std::{path::PathBuf, str::FromStr};
 
 use alloy::{
+    dyn_abi::TypedData,
     primitives::hex,
     signers::Signer,
     signers::local::{MnemonicBuilder, PrivateKeySigner, coins_bip39::English},
 };
 use clap::ArgMatches;
-use eyre::OptionExt;
 
 use crate::output;
-use crate::schema::load_and_validate;
+use crate::schema;
 
-/// Extract the common arguments (input file path, pretty flag) from the CLI args.
-fn parse_common_args(args: &ArgMatches) -> eyre::Result<(PathBuf, bool)> {
-    let file_path = args
-        .get_one::<String>("input")
-        .map(PathBuf::from)
-        .ok_or_eyre("Input file path is required")?;
+/// Load typed data from a file argument or stdin, and extract the pretty flag.
+fn load_input(args: &ArgMatches) -> eyre::Result<(TypedData, bool)> {
     let pretty = args.get_flag("pretty");
-    Ok((file_path, pretty))
+    let json = match args.get_one::<String>("input").map(PathBuf::from) {
+        Some(file_path) => schema::load_and_validate(file_path)?,
+        None => schema::load_and_validate_stdin()?,
+    };
+    Ok((json, pretty))
 }
 
 /// Run the `hash` subcommand.
 pub fn run_hash(args: &ArgMatches) -> eyre::Result<()> {
-    let (file_path, pretty) = parse_common_args(args)?;
-
-    let json = load_and_validate(file_path)?;
+    let (json, pretty) = load_input(args)?;
     let signing_hash = json.eip712_signing_hash()?;
 
     if pretty {
@@ -39,7 +37,7 @@ pub fn run_hash(args: &ArgMatches) -> eyre::Result<()> {
 
 /// Run the `sign` subcommand.
 pub async fn run_sign(args: &ArgMatches) -> eyre::Result<()> {
-    let (file_path, pretty) = parse_common_args(args)?;
+    let (json, pretty) = load_input(args)?;
 
     let credential = if let Some(private_key) = args.get_one::<String>("private-key") {
         PrivateKeySigner::from_str(private_key)?
@@ -54,7 +52,6 @@ pub async fn run_sign(args: &ArgMatches) -> eyre::Result<()> {
         ));
     };
 
-    let json = load_and_validate(file_path)?;
     let signature = credential.sign_hash(&json.eip712_signing_hash()?).await?;
 
     if pretty {
