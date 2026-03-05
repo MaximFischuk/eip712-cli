@@ -41,4 +41,25 @@ pub fn build_cli() -> Command {
                         .multiple(true),
                 ),
         )
+        .subcommand(
+            Command::new("verify")
+                .about("Verify an EIP-712 signature")
+                .arg(
+                    arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
+                        .required(true)
+                        .index(1),
+                )
+                .arg(arg!(--"public-key" <PUBLIC_KEY> "The uncompressed public key to verify against (hex, 64 or 65 bytes)"))
+                .arg(arg!(--address <ADDRESS> "The Ethereum address to verify against"))
+                .arg(
+                    arg!(--signature <SIGNATURE> "The 65-byte signature to verify (hex encoded)")
+                        .required(true),
+                )
+                .arg(arg!(--pretty "Print output as a pretty colored table"))
+                .group(
+                    ArgGroup::new("verifier")
+                        .args(["public-key", "address"])
+                        .required(true),
+                ),
+        )
 }

@@ -10,6 +10,7 @@ clap = "4.5.60"
 
 # Error handling
 eyre = "0.6.12"
+color-eyre = "0.6"
 
 # Web3
 alloy = { version = "1.7.3", features = [

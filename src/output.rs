@@ -200,6 +200,38 @@ fn print_primary_type_info(json: &TypedData) -> eyre::Result<()> {
     Ok(())
 }
 
+/// Print the pretty verify output (preamble + verified address table).
+pub fn print_pretty_verify_output(
+    json: &TypedData,
+    address: &alloy::primitives::Address,
+    signing_hash: &alloy::primitives::B256,
+) -> eyre::Result<()> {
+    print_common_preamble("EIP-712 Verification Result", json)?;
+
+    print_section_header("Verification");
+    let mut table = new_table();
+    table.set_header(vec![
+        Cell::new("Field").fg(Color::Cyan),
+        Cell::new("Value").fg(Color::Cyan),
+    ]);
+    table.add_row(vec![
+        Cell::new("Status").fg(Color::Yellow),
+        Cell::new("Verified ✓").fg(Color::Green),
+    ]);
+    table.add_row(vec![
+        Cell::new("Recovered Address").fg(Color::Yellow),
+        Cell::new(format!("{address}")).fg(Color::Green),
+    ]);
+    table.add_row(vec![
+        Cell::new("Signing Hash").fg(Color::Yellow),
+        Cell::new(format!("0x{}", hex::encode(signing_hash))).fg(Color::White),
+    ]);
+    println!("{table}");
+    println!();
+
+    Ok(())
+}
+
 fn print_section_header(title: &str) {
     println!("{}", format!("── {title} ──").bold().cyan());
 }

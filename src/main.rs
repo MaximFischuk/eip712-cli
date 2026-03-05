@@ -5,6 +5,7 @@ mod schema;
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let cmd = cli::build_cli().get_matches();
 
     match cmd.subcommand() {
@@ -13,6 +14,9 @@ async fn main() -> eyre::Result<()> {
         }
         Some(("sign", args)) => {
             commands::run_sign(args).await?;
+        }
+        Some(("verify", args)) => {
+            commands::run_verify(args)?;
         }
         _ => {
             eprintln!("No valid subcommand was provided. Use --help for more information.");
