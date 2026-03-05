@@ -101,7 +101,6 @@ jobs:
     name: Update Homebrew Formula
     needs: release
     runs-on: ubuntu-latest
-    if: false # Disable this job for now, as it requires manual setup of the tap repository and token
     steps:
       - name: Checkout tap repository
         uses: actions/checkout@v4
