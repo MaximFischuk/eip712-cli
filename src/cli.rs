@@ -1,3 +1,7 @@
+use alloy::{
+    primitives::{Address, Signature},
+    signers::{k256::ecdsa::VerifyingKey, local::PrivateKeySigner},
+};
 use clap::{ArgGroup, Command, arg};
 
 /// Build the CLI command structure for the EIP-712 tool.
@@ -8,6 +12,8 @@ pub fn build_cli() -> Command {
         .about("A command-line tool for working with EIP-712 typed data.")
         .help_expected(true)
         .propagate_version(true)
+        .subcommand_required(true)
+        .arg_required_else_help(true)
         .subcommand(
             Command::new("hash")
                 .about("Hash EIP-712 typed data")
@@ -17,11 +23,12 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("sign")
                 .about("Sign EIP-712 typed data")
-                .arg(arg!(--"private-key" <PRIVATE_KEY> "The private key to sign the data with"))
+                .arg(arg!(--"private-key" <PRIVATE_KEY> "The private key to sign the data with").value_parser(clap::value_parser!(PrivateKeySigner)))
                 .args([
                     arg!(--mnemonic <MNEMONIC> "The mnemonic to derive the private key from"),
                     arg!(--index <INDEX> "The index of the derived private key (default: 0)")
                         .default_value("0")
+                        .value_parser(clap::value_parser!(u32))
                         .conflicts_with("private-key"),
                 ])
                 .arg(
@@ -49,11 +56,12 @@ pub fn build_cli() -> Command {
                         .required(true)
                         .index(1),
                 )
-                .arg(arg!(--"public-key" <PUBLIC_KEY> "The uncompressed public key to verify against (hex, 64 or 65 bytes)"))
-                .arg(arg!(--address <ADDRESS> "The Ethereum address to verify against"))
+                .arg(arg!(--"public-key" <PUBLIC_KEY> "The uncompressed public key to verify against (hex, 64 or 65 bytes)").value_parser(clap::value_parser!(VerifyingKey)))
+                .arg(arg!(--address <ADDRESS> "The Ethereum address to verify against").value_parser(clap::value_parser!(Address)))
                 .arg(
                     arg!(--signature <SIGNATURE> "The 65-byte signature to verify (hex encoded)")
-                        .required(true),
+                        .required(true)
+                        .value_parser(clap::value_parser!(Signature)),
                 )
                 .arg(arg!(--pretty "Print output as a pretty colored table"))
                 .group(

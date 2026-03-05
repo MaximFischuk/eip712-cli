@@ -1,4 +1,7 @@
-use alloy::{dyn_abi::TypedData, primitives::hex};
+use alloy::{
+    dyn_abi::TypedData,
+    primitives::{B256, hex},
+};
 use colored::Colorize;
 use comfy_table::{Cell, Color, Table, modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL};
 
@@ -40,6 +43,7 @@ pub fn print_pretty_hash_output(
 /// Print the pretty sign output (preamble + signature table).
 pub fn print_pretty_sign_output(
     json: &TypedData,
+    signing_hash: &B256,
     signature: &alloy::signers::Signature,
 ) -> eyre::Result<()> {
     print_common_preamble("EIP-712 Signature Result", json)?;
@@ -55,7 +59,6 @@ pub fn print_pretty_sign_output(
         Cell::new(format!("{signature}")).fg(Color::Green),
     ]);
 
-    let signing_hash = json.eip712_signing_hash()?;
     table.add_row(vec![
         Cell::new("Signing Hash").fg(Color::Yellow),
         Cell::new(format!("0x{}", hex::encode(signing_hash))).fg(Color::White),
