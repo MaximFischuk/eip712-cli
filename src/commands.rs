@@ -32,7 +32,7 @@ pub fn run_hash(args: &ArgMatches) -> eyre::Result<()> {
     if pretty {
         output::print_pretty_hash_output(&json, &signing_hash)?;
     } else {
-        print!("0x{}", hex::encode(signing_hash));
+        println!("0x{}", hex::encode(signing_hash));
     }
 
     Ok(())
@@ -75,7 +75,7 @@ pub async fn run_sign(args: &ArgMatches) -> eyre::Result<()> {
     if pretty {
         output::print_pretty_sign_output(&json, &signature)?;
     } else {
-        print!("{signature}");
+        println!("{signature}");
     }
 
     Ok(())
@@ -121,7 +121,7 @@ pub fn run_verify(args: &ArgMatches) -> eyre::Result<()> {
     if pretty {
         output::print_pretty_verify_output(&json, &recovered_address, &signing_hash)?;
     } else {
-        print!("Verified");
+        println!("Verified");
     }
 
     Ok(())
