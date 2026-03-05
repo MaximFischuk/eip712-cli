@@ -6,6 +6,7 @@ mod schema;
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     color_eyre::install()?;
+    dotenvy::dotenv().ok();
     let cmd = cli::build_cli().get_matches();
 
     match cmd.subcommand() {

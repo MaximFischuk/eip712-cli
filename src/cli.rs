@@ -17,26 +17,28 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("hash")
                 .about("Hash EIP-712 typed data")
-                .arg(arg!([input] "Path to the JSON file (reads from stdin if omitted)").index(1))
-                .arg(arg!(--pretty "Print output as a pretty colored table")),
+                .arg(arg!([input] "Path to the JSON file (reads from stdin if omitted)").index(1).env("EIP712_INPUT"))
+                .arg(arg!(--pretty "Print output as a pretty colored table").env("EIP712_PRETTY")),
         )
         .subcommand(
             Command::new("sign")
                 .about("Sign EIP-712 typed data")
-                .arg(arg!(--"private-key" <PRIVATE_KEY> "The private key to sign the data with").value_parser(clap::value_parser!(PrivateKeySigner)))
+                .arg(arg!(--"private-key" <PRIVATE_KEY> "The private key to sign the data with").value_parser(clap::value_parser!(PrivateKeySigner)).env("EIP712_PRIVATE_KEY"))
                 .args([
-                    arg!(--mnemonic <MNEMONIC> "The mnemonic to derive the private key from"),
+                    arg!(--mnemonic <MNEMONIC> "The mnemonic to derive the private key from").env("EIP712_MNEMONIC"),
                     arg!(--index <INDEX> "The index of the derived private key (default: 0)")
                         .default_value("0")
                         .value_parser(clap::value_parser!(u32))
-                        .conflicts_with("private-key"),
+                        .conflicts_with("private-key")
+                        .env("EIP712_MNEMONIC_INDEX"),
                 ])
                 .arg(
                     arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
                         .required(true)
-                        .index(1),
+                        .index(1)
+                        .env("EIP712_INPUT"),
                 )
-                .arg(arg!(--pretty "Print output as a pretty colored table"))
+                .arg(arg!(--pretty "Print output as a pretty colored table").env("EIP712_PRETTY"))
                 .group(
                     ArgGroup::new("secret")
                         .args(["private-key", "mnemonic"])
@@ -54,16 +56,18 @@ pub fn build_cli() -> Command {
                 .arg(
                     arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
                         .required(true)
-                        .index(1),
+                        .index(1)
+                        .env("EIP712_INPUT"),
                 )
-                .arg(arg!(--"public-key" <PUBLIC_KEY> "The uncompressed public key to verify against (hex, 64 or 65 bytes)").value_parser(clap::value_parser!(VerifyingKey)))
-                .arg(arg!(--address <ADDRESS> "The Ethereum address to verify against").value_parser(clap::value_parser!(Address)))
+                .arg(arg!(--"public-key" <PUBLIC_KEY> "The uncompressed public key to verify against (hex, 64 or 65 bytes)").value_parser(clap::value_parser!(VerifyingKey)).env("EIP712_PUBLIC_KEY"))
+                .arg(arg!(--address <ADDRESS> "The Ethereum address to verify against").value_parser(clap::value_parser!(Address)).env("EIP712_ADDRESS"))
                 .arg(
                     arg!(--signature <SIGNATURE> "The 65-byte signature to verify (hex encoded)")
                         .required(true)
-                        .value_parser(clap::value_parser!(Signature)),
+                        .value_parser(clap::value_parser!(Signature))
+                        .env("EIP712_SIGNATURE"),
                 )
-                .arg(arg!(--pretty "Print output as a pretty colored table"))
+                .arg(arg!(--pretty "Print output as a pretty colored table").env("EIP712_PRETTY"))
                 .group(
                     ArgGroup::new("verifier")
                         .args(["public-key", "address"])
