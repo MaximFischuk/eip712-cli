@@ -7,6 +7,7 @@ use alloy::{
     signers::{
         Signer,
         k256::ecdsa::VerifyingKey,
+        ledger::{HDPath, LedgerSigner},
         local::{MnemonicBuilder, PrivateKeySigner, coins_bip39::English},
         utils::public_key_to_address,
     },
@@ -44,6 +45,22 @@ pub fn run_hash(args: &ArgMatches) -> eyre::Result<()> {
 pub async fn run_sign(args: &ArgMatches) -> eyre::Result<()> {
     let (json, pretty) = load_input(args)?;
 
+    if args.get_flag("ledger") {
+        let hd_path = args
+            .get_one::<String>("hd-path")
+            .map(|p| HDPath::Other(p.clone()))
+            .unwrap_or(HDPath::LedgerLive(0));
+        let ledger = LedgerSigner::new(hd_path, None).await?;
+        let signing_hash = json.eip712_signing_hash()?;
+        let signature = ledger.sign_dynamic_typed_data(&json).await?;
+        if pretty {
+            output::print_pretty_sign_output(&json, &signing_hash, &signature)?
+        } else {
+            println!("{signature}");
+        }
+        return Ok(());
+    }
+
     let credential = if let Some(signer) = args.get_one::<PrivateKeySigner>("private-key") {
         signer.clone()
     } else if let Some(mnemonic) = args.get_one::<String>("mnemonic") {
@@ -60,7 +77,7 @@ pub async fn run_sign(args: &ArgMatches) -> eyre::Result<()> {
     let signature = credential.sign_hash(&signing_hash).await?;
 
     if pretty {
-        output::print_pretty_sign_output(&json, &signing_hash, &signature)?;
+        output::print_pretty_sign_output(&json, &signing_hash, &signature)?
     } else {
         println!("{signature}");
     }

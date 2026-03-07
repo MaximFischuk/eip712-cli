@@ -2,7 +2,7 @@ use alloy::{
     primitives::{Address, Signature},
     signers::{k256::ecdsa::VerifyingKey, local::PrivateKeySigner},
 };
-use clap::{ArgGroup, Command, arg};
+use clap::{ArgGroup, Command, arg, builder::FalseyValueParser};
 
 /// Build the CLI command structure for the EIP-712 tool.
 pub fn build_cli() -> Command {
@@ -33,6 +33,17 @@ pub fn build_cli() -> Command {
                         .env("EIP712_MNEMONIC_INDEX"),
                 ])
                 .arg(
+                    arg!(--ledger "Use a Ledger hardware wallet for signing")
+                        .value_parser(FalseyValueParser::new())
+                        .env("EIP712_LEDGER"),
+                )
+                .arg(
+                    arg!(--"hd-path" <HD_PATH> "Ledger HD derivation path (e.g. m/44'/60'/0'/0/0)")
+                        .requires("ledger")
+                        .conflicts_with_all(["private-key", "mnemonic"])
+                        .env("EIP712_HD_PATH"),
+                )
+                .arg(
                     arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
                         .required(true)
                         .index(1)
@@ -41,7 +52,7 @@ pub fn build_cli() -> Command {
                 .arg(arg!(--pretty "Print output as a pretty colored table").env("EIP712_PRETTY"))
                 .group(
                     ArgGroup::new("secret")
-                        .args(["private-key", "mnemonic"])
+                        .args(["private-key", "mnemonic", "ledger"])
                         .required(true),
                 )
                 .group(
