@@ -2335,9 +2335,11 @@ dependencies = [
  "dotenvy",
  "eyre",
  "jsonschema",
+ "semver 1.0.27",
  "serde",
  "serde_json",
  "tokio",
+ "unicode-width",
 ]
 
 [[package]]

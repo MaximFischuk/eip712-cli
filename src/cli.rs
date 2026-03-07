@@ -2,7 +2,7 @@ use alloy::{
     primitives::{Address, Signature},
     signers::{k256::ecdsa::VerifyingKey, local::PrivateKeySigner},
 };
-use clap::{ArgGroup, Command, arg};
+use clap::{ArgGroup, Command, arg, builder::FalseyValueParser};
 
 /// Build the CLI command structure for the EIP-712 tool.
 pub fn build_cli() -> Command {
@@ -26,11 +26,21 @@ pub fn build_cli() -> Command {
                 .arg(arg!(--"private-key" <PRIVATE_KEY> "The private key to sign the data with").value_parser(clap::value_parser!(PrivateKeySigner)).env("EIP712_PRIVATE_KEY"))
                 .args([
                     arg!(--mnemonic <MNEMONIC> "The mnemonic to derive the private key from").env("EIP712_MNEMONIC"),
-                    arg!(--index <INDEX> "The index of the derived private key (default: 0)")
+                ])
+                .args([
+                    arg!(--ledger "Use a Ledger hardware wallet for signing")
+                        .value_parser(FalseyValueParser::new())
+                        .env("EIP712_LEDGER"),
+                ])
+                .args([
+                    arg!(--"hd-path" <HD_PATH> "HD derivation path (e.g. m/44'/60'/0'/0/0)")
+                        .conflicts_with("private-key")
+                        .env("EIP712_HD_PATH"),
+                    arg!(--index <INDEX> "HD derivation path index (default: 0)")
+                        .conflicts_with("private-key")
                         .default_value("0")
                         .value_parser(clap::value_parser!(u32))
-                        .conflicts_with("private-key")
-                        .env("EIP712_MNEMONIC_INDEX"),
+                        .env("EIP712_HD_PATH_INDEX"),
                 ])
                 .arg(
                     arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
@@ -41,13 +51,23 @@ pub fn build_cli() -> Command {
                 .arg(arg!(--pretty "Print output as a pretty colored table").env("EIP712_PRETTY"))
                 .group(
                     ArgGroup::new("secret")
-                        .args(["private-key", "mnemonic"])
+                        .args(["private-key", "mnemonic", "ledger"])
                         .required(true),
                 )
                 .group(
                     ArgGroup::new("mnemonic-args")
-                        .args(["mnemonic", "index"])
+                        .args(["mnemonic", "index", "hd-path"])
                         .multiple(true),
+                )
+                .group(
+                    ArgGroup::new("ledger-args")
+                        .args(["ledger", "index", "hd-path"])
+                        .multiple(true),
+                )
+                .group(
+                    ArgGroup::new("derivation-args")
+                        .args(["hd-path", "index"])
+                        .multiple(false),
                 ),
         )
         .subcommand(
