@@ -1,110 +1,90 @@
-mod table;
-
-pub use table::{Accent, Section, render_dashboard};
+//! Legacy pretty-print output using `comfy-table`.
+//!
+//! Renders the same logical sections as the new dashboard format (`super`) but
+//! produces the classic multi-table layout that was the original output style.
+//! The section data is built with the same helpers in the parent module and
+//! structured using the shared [`super::table::Section`] type.
+//!
+//! Currently, this module is excluded from the project!
 
 use alloy::{
     dyn_abi::TypedData,
     primitives::{B256, hex},
 };
 use colored::Colorize;
+use comfy_table::{Cell, Color, Table, modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL};
 
-type OwnedRows = Vec<(String, String)>;
+use super::table::{Accent, Section};
 
-fn to_refs(rows: &OwnedRows) -> Vec<(&str, &str)> {
-    rows.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect()
+// ── Internal helpers ─────────────────────────────────────────────────────────
+
+fn new_table() -> Table {
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS);
+    table
 }
 
-fn print_title(title: &str) {
-    println!();
-    println!("{}", format!(" {title} ").bold().white().on_bright_blue());
-    println!();
+fn print_section_header(title: &str) {
+    println!("{}", format!("── {title} ──").bold().cyan());
 }
 
-fn domain_meta_rows(json: &TypedData) -> OwnedRows {
-    let domain = &json.domain;
-    vec![
-        ("encodeType".to_string(), domain.encode_type()),
-        (
-            "separator".to_string(),
-            format!("0x{}", hex::encode(domain.separator())),
-        ),
-        (
-            "typeHash".to_string(),
-            format!("0x{}", hex::encode(domain.type_hash())),
-        ),
-    ]
+fn accent_to_key_color(accent: Accent) -> Color {
+    match accent {
+        Accent::Blue => Color::Blue,
+        Accent::Cyan => Color::Cyan,
+        Accent::Yellow => Color::Yellow,
+        Accent::Magenta => Color::Magenta,
+    }
 }
 
-fn domain_param_rows(json: &TypedData) -> OwnedRows {
-    let domain = &json.domain;
-    let mut rows = OwnedRows::new();
-    if let Some(name) = &domain.name {
-        rows.push(("name".to_string(), name.as_ref().to_string()));
-    }
-    if let Some(version) = &domain.version {
-        rows.push(("version".to_string(), version.as_ref().to_string()));
-    }
-    if let Some(chain_id) = &domain.chain_id {
-        rows.push(("chainId".to_string(), format!("{chain_id}")));
-    }
-    if let Some(verifying_contract) = &domain.verifying_contract {
-        rows.push((
-            "verifyingContract".to_string(),
-            format!("{verifying_contract}"),
-        ));
-    }
-    if let Some(salt) = &domain.salt {
-        rows.push(("salt".to_string(), format!("0x{}", hex::encode(salt))));
-    }
-    rows
-}
+/// Render a slice of [`Section`]s as separate comfy-table blocks, each
+/// preceded by a section header line.
+fn render_sections(sections: &[Section<'_>]) {
+    for section in sections {
+        print_section_header(section.title);
+        let key_color = accent_to_key_color(section.accent);
 
-fn primary_type_rows(json: &TypedData) -> eyre::Result<OwnedRows> {
-    let primary_type = &json.primary_type;
-    let encode_type = json.resolver.encode_type(primary_type)?;
-    let type_hash = json.type_hash()?;
-    Ok(vec![
-        ("encodeType".to_string(), encode_type),
-        (
-            "typeHash".to_string(),
-            format!("0x{}", hex::encode(type_hash)),
-        ),
-    ])
-}
-
-fn message_rows(json: &TypedData) -> OwnedRows {
-    let mut rows = OwnedRows::new();
-    if let serde_json::Value::Object(map) = &json.message {
-        for (key, value) in map {
-            let display = match value {
-                serde_json::Value::String(s) => s.clone(),
-                other => other.to_string(),
-            };
-            rows.push((key.clone(), display));
+        let mut table = new_table();
+        table.set_header(vec![
+            Cell::new("Field").fg(Color::Cyan),
+            Cell::new("Value").fg(Color::Cyan),
+        ]);
+        for (key, value) in section.rows {
+            table.add_row(vec![
+                Cell::new(*key).fg(key_color),
+                Cell::new(*value).fg(Color::White),
+            ]);
         }
+        println!("{table}");
+        println!();
     }
-    rows
 }
 
-/// Print the pretty hash output using the new dashboard table format.
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/// Print the pretty hash output (legacy multi-table format).
 pub fn print_pretty_hash_output(json: &TypedData, signing_hash: &B256) -> eyre::Result<()> {
-    let dm = domain_meta_rows(json);
-    let dp = domain_param_rows(json);
-    let pt = primary_type_rows(json)?;
-    let mf = message_rows(json);
+    let dm = super::domain_meta_rows(json);
+    let dp = super::domain_param_rows(json);
+    let pt = super::primary_type_rows(json)?;
+    let mf = super::message_rows(json);
     let primary_type = &json.primary_type;
     let pt_title = format!("Primary Type ({primary_type})");
     let mf_title = format!("{primary_type} Message Fields");
-    let hr: OwnedRows = vec![(
+    let hr = vec![(
         "Signing Hash".to_string(),
         format!("0x{}", hex::encode(signing_hash)),
     )];
 
-    let dm_r = to_refs(&dm);
-    let dp_r = to_refs(&dp);
-    let pt_r = to_refs(&pt);
-    let mf_r = to_refs(&mf);
-    let hr_r = to_refs(&hr);
+    let dm_r = super::to_refs(&dm);
+    let dp_r = super::to_refs(&dp);
+    let pt_r = super::to_refs(&pt);
+    let mf_r = super::to_refs(&mf);
+    let hr_r = super::to_refs(&hr);
+
+    super::print_title("EIP-712 Hash Result");
 
     let mut sections: Vec<Section<'_>> = vec![Section {
         title: "Domain (EIP712Domain)",
@@ -136,28 +116,25 @@ pub fn print_pretty_hash_output(json: &TypedData, signing_hash: &B256) -> eyre::
         rows: &hr_r,
     });
 
-    print_title("EIP-712 Hash Result");
-    println!("{}", render_dashboard(&sections, 100, 18));
-    println!();
-
+    render_sections(&sections);
     Ok(())
 }
 
-/// Print the pretty sign output using the new dashboard table format.
+/// Print the pretty sign output (legacy multi-table format).
 pub fn print_pretty_sign_output(
     json: &TypedData,
     signing_hash: &B256,
     signature: &alloy::signers::Signature,
 ) -> eyre::Result<()> {
-    let dm = domain_meta_rows(json);
-    let dp = domain_param_rows(json);
-    let pt = primary_type_rows(json)?;
-    let mf = message_rows(json);
+    let dm = super::domain_meta_rows(json);
+    let dp = super::domain_param_rows(json);
+    let pt = super::primary_type_rows(json)?;
+    let mf = super::message_rows(json);
     let primary_type = &json.primary_type;
     let pt_title = format!("Primary Type ({primary_type})");
     let mf_title = format!("{primary_type} Message Fields");
     let type_hash = json.type_hash()?;
-    let sr: OwnedRows = vec![
+    let sr = vec![
         ("Signature".to_string(), format!("{signature}")),
         (
             "Signing Hash".to_string(),
@@ -169,11 +146,13 @@ pub fn print_pretty_sign_output(
         ),
     ];
 
-    let dm_r = to_refs(&dm);
-    let dp_r = to_refs(&dp);
-    let pt_r = to_refs(&pt);
-    let mf_r = to_refs(&mf);
-    let sr_r = to_refs(&sr);
+    let dm_r = super::to_refs(&dm);
+    let dp_r = super::to_refs(&dp);
+    let pt_r = super::to_refs(&pt);
+    let mf_r = super::to_refs(&mf);
+    let sr_r = super::to_refs(&sr);
+
+    super::print_title("EIP-712 Signature Result");
 
     let mut sections: Vec<Section<'_>> = vec![Section {
         title: "Domain (EIP712Domain)",
@@ -205,27 +184,24 @@ pub fn print_pretty_sign_output(
         rows: &sr_r,
     });
 
-    print_title("EIP-712 Signature Result");
-    println!("{}", render_dashboard(&sections, 160, 18));
-    println!();
-
+    render_sections(&sections);
     Ok(())
 }
 
-/// Print the pretty verify output using the new dashboard table format.
+/// Print the pretty verify output (legacy multi-table format).
 pub fn print_pretty_verify_output(
     json: &TypedData,
     address: &alloy::primitives::Address,
     signing_hash: &B256,
 ) -> eyre::Result<()> {
-    let dm = domain_meta_rows(json);
-    let dp = domain_param_rows(json);
-    let pt = primary_type_rows(json)?;
-    let mf = message_rows(json);
+    let dm = super::domain_meta_rows(json);
+    let dp = super::domain_param_rows(json);
+    let pt = super::primary_type_rows(json)?;
+    let mf = super::message_rows(json);
     let primary_type = &json.primary_type;
     let pt_title = format!("Primary Type ({primary_type})");
     let mf_title = format!("{primary_type} Message Fields");
-    let vr: OwnedRows = vec![
+    let vr = vec![
         ("Status".to_string(), "Verified ✓".to_string()),
         ("Recovered Address".to_string(), format!("{address}")),
         (
@@ -234,11 +210,13 @@ pub fn print_pretty_verify_output(
         ),
     ];
 
-    let dm_r = to_refs(&dm);
-    let dp_r = to_refs(&dp);
-    let pt_r = to_refs(&pt);
-    let mf_r = to_refs(&mf);
-    let vr_r = to_refs(&vr);
+    let dm_r = super::to_refs(&dm);
+    let dp_r = super::to_refs(&dp);
+    let pt_r = super::to_refs(&pt);
+    let mf_r = super::to_refs(&mf);
+    let vr_r = super::to_refs(&vr);
+
+    super::print_title("EIP-712 Verification Result");
 
     let mut sections: Vec<Section<'_>> = vec![Section {
         title: "Domain (EIP712Domain)",
@@ -270,9 +248,6 @@ pub fn print_pretty_verify_output(
         rows: &vr_r,
     });
 
-    print_title("EIP-712 Verification Result");
-    println!("{}", render_dashboard(&sections, 100, 18));
-    println!();
-
+    render_sections(&sections);
     Ok(())
 }

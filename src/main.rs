@@ -2,6 +2,7 @@ mod cli;
 mod commands;
 mod output;
 mod schema;
+mod signer;
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
