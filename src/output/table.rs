@@ -202,8 +202,6 @@ fn row_lines(accent: Accent, key: &str, value: &str, key_w: usize, val_w: usize)
 }
 
 pub fn render_dashboard(sections: &[Section], total_width: usize, key_width_hint: usize) -> String {
-    assert!(!sections.is_empty(), "Need at least one section");
-
     let max_key = sections
         .iter()
         .flat_map(|s| s.rows.iter())

@@ -31,7 +31,7 @@ pub fn build_cli() -> Command {
                     arg!(--ledger "Use a Ledger hardware wallet for signing")
                         .value_parser(FalseyValueParser::new())
                         .env("EIP712_LEDGER"),
-                    arg!(--insecure "Allow signing raw hashes blindly without showing the user the structured data. This allow to use old Ledger Ethereum apps or Ledger Nano S")
+                    arg!(--insecure "Allow signing raw hashes blindly without showing the user the structured data. This allows using old Ledger Ethereum apps or Ledger Nano S")
                         .conflicts_with_all(&["private-key", "mnemonic"])
                         .env("EIP712_INSECURE"),
                 ])
@@ -39,9 +39,8 @@ pub fn build_cli() -> Command {
                     arg!(--"hd-path" <HD_PATH> "HD derivation path (e.g. m/44'/60'/0'/0/0)")
                         .conflicts_with("private-key")
                         .env("EIP712_HD_PATH"),
-                    arg!(--index <INDEX> "HD derivation path index (default: 0)")
+                    arg!(--index <INDEX> "HD derivation path index")
                         .conflicts_with("private-key")
-                        .default_value("0")
                         .value_parser(clap::value_parser!(u32))
                         .env("EIP712_HD_PATH_INDEX"),
                 ])
