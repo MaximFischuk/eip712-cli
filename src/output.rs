@@ -1,4 +1,3 @@
-pub mod legacy;
 mod table;
 
 pub use table::{Accent, Section, render_dashboard};

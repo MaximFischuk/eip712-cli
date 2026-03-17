@@ -4,6 +4,8 @@
 //! produces the classic multi-table layout that was the original output style.
 //! The section data is built with the same helpers in the parent module and
 //! structured using the shared [`super::table::Section`] type.
+//!
+//! Currently, this module is excluded from the project!
 
 use alloy::{
     dyn_abi::TypedData,
