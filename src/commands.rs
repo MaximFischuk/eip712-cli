@@ -73,9 +73,17 @@ pub async fn run_sign(args: &ArgMatches) -> eyre::Result<()> {
 
     if args.get_flag("ledger") {
         let hd_path = hd_path_from_args(args);
-        let ledger = LedgerSigner::new(hd_path).await?;
+        let signature = if args.get_flag("insecure") {
+            eprintln!(
+                "Warning: using Ledger in insecure mode. Make sure you trust the data you are signing."
+            );
+            let ledget = alloy::signers::ledger::LedgerSigner::new(hd_path, None).await?;
+            ledget.sign_dynamic_typed_data(&json).await?
+        } else {
+            let ledger = LedgerSigner::new(hd_path).await?;
+            ledger.sign_typed_data(&json).await?
+        };
         let signing_hash = json.eip712_signing_hash()?;
-        let signature = ledger.sign_typed_data(&json).await?;
         return print_sign_output(&json, &signing_hash, &signature, pretty);
     }
 
