@@ -4,6 +4,10 @@ use alloy::{
 };
 use clap::{ArgGroup, Command, arg, builder::FalseyValueParser};
 
+const PRIVATE_KEY_HELP_HEADING: &str = "Private Key Signer";
+const MNEMONIC_HELP_HEADING: &str = "Mnemonic Signer";
+const LEDGER_HELP_HEADING: &str = "Ledger Signer";
+
 /// Build the CLI command structure for the EIP-712 tool.
 pub fn build_cli() -> Command {
     Command::new("Eip712 Cli")
@@ -23,26 +27,37 @@ pub fn build_cli() -> Command {
         .subcommand(
             Command::new("sign")
                 .about("Sign EIP-712 typed data")
-                .arg(arg!(--"private-key" <PRIVATE_KEY> "The private key to sign the data with").value_parser(clap::value_parser!(PrivateKeySigner)).env("EIP712_PRIVATE_KEY"))
+                .arg(arg!(--"private-key" <PRIVATE_KEY> "The private key to sign the data with").value_parser(clap::value_parser!(PrivateKeySigner)).env("EIP712_PRIVATE_KEY").help_heading(PRIVATE_KEY_HELP_HEADING))
                 .args([
-                    arg!(--mnemonic <MNEMONIC> "The mnemonic to derive the private key from").env("EIP712_MNEMONIC"),
+                    arg!(--mnemonic <MNEMONIC> "The mnemonic to derive the private key from").env("EIP712_MNEMONIC").help_heading(MNEMONIC_HELP_HEADING),
+                    arg!(--"hd-path" <HD_PATH> "HD derivation path (e.g. m/44'/60'/0'/0/0)")
+                        .conflicts_with("private-key")
+                        .env("EIP712_HD_PATH")
+                        .help_heading(MNEMONIC_HELP_HEADING),
+                    arg!(--index <INDEX> "HD derivation path index")
+                        .conflicts_with("private-key")
+                        .value_parser(clap::value_parser!(u32))
+                        .env("EIP712_HD_PATH_INDEX")
+                        .help_heading(MNEMONIC_HELP_HEADING),
                 ])
                 .args([
                     arg!(--ledger "Use a Ledger hardware wallet for signing")
                         .value_parser(FalseyValueParser::new())
-                        .env("EIP712_LEDGER"),
-                    arg!(--insecure "Allow signing raw hashes blindly without showing the user the structured data. This allows using old Ledger Ethereum apps or Ledger Nano S")
-                        .conflicts_with_all(&["private-key", "mnemonic"])
-                        .env("EIP712_INSECURE"),
-                ])
-                .args([
+                        .env("EIP712_LEDGER")
+                        .help_heading(LEDGER_HELP_HEADING),
                     arg!(--"hd-path" <HD_PATH> "HD derivation path (e.g. m/44'/60'/0'/0/0)")
                         .conflicts_with("private-key")
-                        .env("EIP712_HD_PATH"),
+                        .env("EIP712_HD_PATH")
+                        .help_heading(LEDGER_HELP_HEADING),
                     arg!(--index <INDEX> "HD derivation path index")
                         .conflicts_with("private-key")
                         .value_parser(clap::value_parser!(u32))
-                        .env("EIP712_HD_PATH_INDEX"),
+                        .env("EIP712_HD_PATH_INDEX")
+                        .help_heading(LEDGER_HELP_HEADING),
+                    arg!(--insecure "Allow signing raw hashes blindly without showing the user the structured data. This allows using old Ledger Ethereum apps or Ledger Nano S")
+                            .conflicts_with_all(["private-key", "mnemonic"])
+                            .env("EIP712_INSECURE")
+                            .help_heading(LEDGER_HELP_HEADING),
                 ])
                 .arg(
                     arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
