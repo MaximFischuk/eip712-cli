@@ -9,6 +9,7 @@ use alloy::{
         k256::ecdsa::VerifyingKey,
         ledger::HDPath,
         local::{MnemonicBuilder, PrivateKeySigner, coins_bip39::English},
+        turnkey::{TurnkeyClient, TurnkeyP256ApiKey, TurnkeySigner},
         utils::public_key_to_address,
     },
 };
@@ -37,6 +38,33 @@ fn hd_path_from_args(args: &ArgMatches) -> HDPath {
         let index = args.get_one::<u32>("index").copied().unwrap_or(0);
         HDPath::LedgerLive(index as usize)
     }
+}
+
+fn build_turnkey_client(args: &ArgMatches) -> eyre::Result<TurnkeyClient> {
+    let api_private_key = args
+        .get_one::<String>("turnkey-api-private-key")
+        .ok_or_else(|| eyre::eyre!("Turnkey signer requires --turnkey-api-private-key"))?;
+    let api_key = TurnkeyP256ApiKey::from_strings(api_private_key, None)?;
+
+    let mut builder = TurnkeyClient::builder().api_key(api_key);
+    if let Some(base_url) = args.get_one::<String>("turnkey-base-url") {
+        builder = builder.base_url(base_url.clone());
+    }
+
+    Ok(builder.build()?)
+}
+
+fn build_turnkey_signer(args: &ArgMatches) -> eyre::Result<TurnkeySigner> {
+    let organization_id = args
+        .get_one::<String>("turnkey-organization-id")
+        .ok_or_else(|| eyre::eyre!("Turnkey signer requires --turnkey-organization-id"))?
+        .clone();
+    let address = *args
+        .get_one::<Address>("turnkey-address")
+        .ok_or_else(|| eyre::eyre!("Turnkey signer requires --turnkey-address"))?;
+
+    let client = build_turnkey_client(args)?;
+    Ok(TurnkeySigner::new(client, organization_id, address, None))
 }
 
 fn print_sign_output(
@@ -84,6 +112,13 @@ pub async fn run_sign(args: &ArgMatches) -> eyre::Result<()> {
             ledger.sign_typed_data(&json).await?
         };
         let signing_hash = json.eip712_signing_hash()?;
+        return print_sign_output(&json, &signing_hash, &signature, pretty);
+    }
+
+    if args.get_flag("turnkey") {
+        let signing_hash = json.eip712_signing_hash()?;
+        let signer = build_turnkey_signer(args)?;
+        let signature = signer.sign_hash(&signing_hash).await?;
         return print_sign_output(&json, &signing_hash, &signature, pretty);
     }
 
