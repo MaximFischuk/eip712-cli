@@ -1,6 +1,6 @@
 # EIP-712 CLI
 
-A command-line tool for working with [EIP-712](https://eips.ethereum.org/EIPS/eip-712) typed structured data — hash, sign, and verify messages offline.
+A command-line tool for working with [EIP-712](https://eips.ethereum.org/EIPS/eip-712) typed structured data — hash, sign, and verify messages.
 
 ## Features
 
@@ -90,6 +90,40 @@ cat message.json | eip712 hash
 eip712 hash --pretty message.json
 ```
 
+<details>
+<summary>Example <code>--pretty</code> output</summary>
+
+```
+EIP-712 Hash Result
+
+╭───────────────────────────────────── Domain (EIP712Domain) ──────────────────────────────────────╮
+│ encodeType         │ EIP712Domain(string name,string version,uint256 chainId,address             │
+│                    │ verifyingContract)                                                          │
+│ separator          │ 0x6137beb405d9ff777172aa879e33edb34a1460e701802746c5ef96e741710e59          │
+│ typeHash           │ 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f          │
+├─────────────────────────────────────── Domain Parameters ────────────────────────────────────────┤
+│ name               │ Ether Mail                                                                  │
+│ version            │ 1                                                                           │
+│ chainId            │ 5                                                                           │
+│ verifyingContract  │ 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC                                  │
+├────────────────────────────────────── Primary Type (Mail) ───────────────────────────────────────┤
+│ encodeType         │ Mail(Person from,Person to,string contents)Person(string name,address[]     │
+│                    │ wallets)                                                                    │
+│ typeHash           │ 0x5b1f8a8eaa25a46aa443b0cc79f29a9c3b8cdefbf74027593e73d8d407340c12          │
+├────────────────────────────────────── Mail Message Fields ───────────────────────────────────────┤
+│ contents           │ Hello, Bob!                                                                 │
+│ from               │ {"name":"Cow","wallets":["0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826","0xDe │
+│                    │ aDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF"]}                                   │
+│ to                 │ {"name":"Bob","wallets":["0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB","0xB0 │
+│                    │ BdaBea57B0BDABeA57b0bdABEA57b0BDabEa57","0xB0B0b0b0b0b0B0000000000000000000 │
+│                    │ 00000000"]}                                                                 │
+├────────────────────────────────────────── Signing Hash ──────────────────────────────────────────┤
+│ Signing Hash       │ 0xe1ba5e914d73ca971c6f36e8c6782929b2fec69b602442297f0a4bac35b387ce          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+</details>
+
 ### Sign
 
 Sign typed data with a private key:
@@ -122,6 +156,43 @@ Pretty output:
 eip712 sign --private-key 0x... --pretty message.json
 ```
 
+<details>
+<summary>Example <code>--pretty</code> output</summary>
+
+```
+EIP-712 Signature Result
+
+╭───────────────────────────────────── Domain (EIP712Domain) ──────────────────────────────────────╮
+│ encodeType         │ EIP712Domain(string name,string version,uint256 chainId,address             │
+│                    │ verifyingContract)                                                          │
+│ separator          │ 0x6137beb405d9ff777172aa879e33edb34a1460e701802746c5ef96e741710e59          │
+│ typeHash           │ 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f          │
+├─────────────────────────────────────── Domain Parameters ────────────────────────────────────────┤
+│ name               │ Ether Mail                                                                  │
+│ version            │ 1                                                                           │
+│ chainId            │ 5                                                                           │
+│ verifyingContract  │ 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC                                  │
+├────────────────────────────────────── Primary Type (Mail) ───────────────────────────────────────┤
+│ encodeType         │ Mail(Person from,Person to,string contents)Person(string name,address[]     │
+│                    │ wallets)                                                                    │
+│ typeHash           │ 0x5b1f8a8eaa25a46aa443b0cc79f29a9c3b8cdefbf74027593e73d8d407340c12          │
+├────────────────────────────────────── Mail Message Fields ───────────────────────────────────────┤
+│ contents           │ Hello, Bob!                                                                 │
+│ from               │ {"name":"Cow","wallets":["0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826","0xDe │
+│                    │ aDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF"]}                                   │
+│ to                 │ {"name":"Bob","wallets":["0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB","0xB0 │
+│                    │ BdaBea57B0BDABeA57b0bdABEA57b0BDabEa57","0xB0B0b0b0b0b0B0000000000000000000 │
+│                    │ 00000000"]}                                                                 │
+├────────────────────────────────────────── Signature ─────────────────────────────────────────────┤
+│ Signature          │ 0x6e54a02f96876c3aea0300ac9bcb4a255af3c0db948451b79a1133128b89997a5f8785c07 │
+│                    │ c55735bd0406cf8362558c9b5547921e7a95730e330527854e193281c                   │
+│ Signing Hash       │ 0xe1ba5e914d73ca971c6f36e8c6782929b2fec69b602442297f0a4bac35b387ce          │
+│ Type Hash          │ 0x5b1f8a8eaa25a46aa443b0cc79f29a9c3b8cdefbf74027593e73d8d407340c12          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+</details>
+
 ### Verify
 
 Verify a signature against an Ethereum address:
@@ -143,6 +214,42 @@ Pretty output:
 ```sh
 eip712 verify --address 0x... --signature 0x... --pretty message.json
 ```
+
+<details>
+<summary>Example <code>--pretty</code> output</summary>
+
+```
+EIP-712 Verification Result
+
+╭───────────────────────────────────── Domain (EIP712Domain) ──────────────────────────────────────╮
+│ encodeType         │ EIP712Domain(string name,string version,uint256 chainId,address             │
+│                    │ verifyingContract)                                                          │
+│ separator          │ 0x6137beb405d9ff777172aa879e33edb34a1460e701802746c5ef96e741710e59          │
+│ typeHash           │ 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f          │
+├─────────────────────────────────────── Domain Parameters ────────────────────────────────────────┤
+│ name               │ Ether Mail                                                                  │
+│ version            │ 1                                                                           │
+│ chainId            │ 5                                                                           │
+│ verifyingContract  │ 0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC                                  │
+├────────────────────────────────────── Primary Type (Mail) ───────────────────────────────────────┤
+│ encodeType         │ Mail(Person from,Person to,string contents)Person(string name,address[]     │
+│                    │ wallets)                                                                    │
+│ typeHash           │ 0x5b1f8a8eaa25a46aa443b0cc79f29a9c3b8cdefbf74027593e73d8d407340c12          │
+├────────────────────────────────────── Mail Message Fields ───────────────────────────────────────┤
+│ contents           │ Hello, Bob!                                                                 │
+│ from               │ {"name":"Cow","wallets":["0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826","0xDe │
+│                    │ aDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF"]}                                   │
+│ to                 │ {"name":"Bob","wallets":["0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB","0xB0 │
+│                    │ BdaBea57B0BDABeA57b0bdABEA57b0BDabEa57","0xB0B0b0b0b0b0B0000000000000000000 │
+│                    │ 00000000"]}                                                                 │
+├────────────────────────────────────────── Verification ──────────────────────────────────────────┤
+│ Status             │ Verified ✓                                                                  │
+│ Recovered Address  │ 0xFCAd0B19bB29D4674531d6f115237E16AfCE377c                                  │
+│ Signing Hash       │ 0xe1ba5e914d73ca971c6f36e8c6782929b2fec69b602442297f0a4bac35b387ce          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+</details>
 
 ## License
 
