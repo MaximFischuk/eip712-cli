@@ -108,6 +108,14 @@ eip712 sign --mnemonic "word1 word2 ... word12" message.json
 eip712 sign --mnemonic "word1 word2 ... word12" --index 2 message.json
 ```
 
+Sign with a Ledger hardware wallet:
+
+See [docs/ledger.md](docs/ledger.md) for setup, derivation path options, insecure mode, and environment variables.
+
+Sign with Turnkey:
+
+See [docs/turnkey.md](docs/turnkey.md) for required credentials, environment variables, and usage examples.
+
 Pretty output:
 
 ```sh
