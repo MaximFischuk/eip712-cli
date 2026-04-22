@@ -1,1 +1,8 @@
 /target
+
+# Mise local configs
+**/mise.local.toml
+**/mise.*.local.toml
+
+# Fnox secrets
+**/fnox.local.toml
