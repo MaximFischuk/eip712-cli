@@ -106,8 +106,7 @@ pub fn build_cli() -> Command {
                         .help_heading(TURNKEY_HELP_HEADING),
                 ])
                 .arg(
-                    arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
-                        .required(true)
+                    arg!([input] "Path to the JSON file containing the EIP-712 typed data (reads from stdin if omitted)")
                         .index(1)
                         .env(EIP712_INPUT_ENV_NAME),
                 )
@@ -137,8 +136,7 @@ pub fn build_cli() -> Command {
             Command::new("verify")
                 .about("Verify an EIP-712 signature")
                 .arg(
-                    arg!(<input> "Path to the JSON file containing the EIP-712 typed data")
-                        .required(true)
+                    arg!([input] "Path to the JSON file containing the EIP-712 typed data (reads from stdin if omitted)")
                         .index(1)
                         .env(EIP712_INPUT_ENV_NAME),
                 )
